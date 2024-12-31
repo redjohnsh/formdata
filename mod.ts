@@ -1,22 +1,16 @@
 /**
  * @module
  *
- * A lightweight TypeScript utility for encoding JSON-like objects into FormData
- * and decoding FormData back into structured data. This module supports nested
- * objects and arrays, preserving array order and adhering to common FormData key
- * conventions using bracket notation.
+ * A lightweight utility for working with `FormData`, enabling the encoding of
+ * complex objects into `FormData` and decoding `FormData` back into structured objects.
+ * This module preserves array order and supports nested objects, adhering to common
+ * bracket notation conventions.
  *
- * ## Features
- * - Encode nested objects and arrays into FormData.
- * - Decode FormData back into a JSON-like object.
- * - Preserves array order and reconstructs complex structures.
+ * @example
+ * ```ts
+ * import { encode, decode } from "@rj/formdata";
  *
- * ## Usage
- *
- * ### Encoding a Complex Object
- * ```typescript
- * import { encode } from "@rj/formdata";
- *
+ * // Encoding a complex object
  * const data = {
  *   email: "john@doe.com",
  *   address: { city: "New York", zip: 10001 },
@@ -24,69 +18,24 @@
  * };
  *
  * const formData = encode(data);
- * // Result:
- * // email: "john@doe.com"
- * // address[city]: "New York"
- * // address[zip]: "10001"
- * // tags[0]: "foo"
- * // tags[1]: "bar"
- * ```
+ * console.log([...formData.entries()]);
+ * // [
+ * //   ["email", "john@doe.com"],
+ * //   ["address[city]", "New York"],
+ * //   ["address[zip]", "10001"],
+ * //   ["tags[0]", "foo"],
+ * //   ["tags[1]", "bar"]
+ * // ]
  *
- * ### Decoding FormData
- * ```typescript
- * import { decode } from "@rj/formdata";
- *
- * const formData = new FormData();
- * formData.append("email", "john@doe.com");
- * formData.append("address[city]", "New York");
- * formData.append("address[zip]", "10001");
- * formData.append("tags[0]", "foo");
- * formData.append("tags[1]", "bar");
- *
- * const data = decode(formData);
- * // Result:
+ * // Decoding FormData
+ * const decoded = decode(formData);
+ * console.log(decoded);
  * // {
  * //   email: "john@doe.com",
  * //   address: { city: "New York", zip: "10001" },
  * //   tags: ["foo", "bar"],
  * // }
  * ```
- *
- * ### Nested Objects in Arrays
- * ```typescript
- * const formData = new FormData();
- * formData.append("users[0][name]", "john doe");
- * formData.append("users[1][name]", "jane doe");
- * formData.append("users[0][tags][0]", "foo");
- *
- * const data = decode(formData);
- * // Result:
- * // {
- * //   users: [
- * //     { name: "john doe", tags: ["foo"] },
- * //     { name: "jane doe" },
- * //   ],
- * // }
- * ```
- *
- * ## API
- *
- * ### encode(data: Record<string, unknown>): FormData
- * Encodes a JSON-like object into a FormData instance using bracket notation.
- *
- * - **Arguments**:
- *   - `data`: A JSON-like object to encode.
- * - **Returns**: A FormData instance.
- *
- * ### decode(formData: FormData): Record<string, unknown>
- * Decodes a FormData instance into a structured JSON-like object.
- *
- * - **Arguments**:
- *   - `formData`: The FormData instance to decode.
- * - **Returns**: A JSON-like object.
- *
- * ## License
- * MIT
  */
 
 /**

@@ -83,3 +83,16 @@ Deno.test("decode() handles complex nested data", () => {
 	};
 	assertEquals(actual, expected);
 });
+
+Deno.test("decode() handles nested objects inside arrays", () => {
+	const formData = new FormData();
+	formData.append("users[0][name]", "john doe");
+	formData.append("users[1][name]", "jane doe");
+	formData.append("users[0][tags][0]", "foo");
+
+	const actual = decode(formData);
+	const expected = {
+		users: [{ name: "john doe", tags: ["foo"] }, { name: "jane doe" }],
+	};
+	assertEquals(actual, expected);
+});

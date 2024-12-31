@@ -1,4 +1,93 @@
-type JSONValue = string | { [x: string]: JSONValue } | Array<JSONValue>;
+/**
+ * @module
+ *
+ * A lightweight TypeScript utility for encoding JSON-like objects into FormData
+ * and decoding FormData back into structured data. This module supports nested
+ * objects and arrays, preserving array order and adhering to common FormData key
+ * conventions using bracket notation.
+ *
+ * ## Features
+ * - Encode nested objects and arrays into FormData.
+ * - Decode FormData back into a JSON-like object.
+ * - Preserves array order and reconstructs complex structures.
+ *
+ * ## Usage
+ *
+ * ### Encoding a Complex Object
+ * ```typescript
+ * import { encode } from "@rj/formdata";
+ *
+ * const data = {
+ *   email: "john@doe.com",
+ *   address: { city: "New York", zip: 10001 },
+ *   tags: ["foo", "bar"],
+ * };
+ *
+ * const formData = encode(data);
+ * // Result:
+ * // email: "john@doe.com"
+ * // address[city]: "New York"
+ * // address[zip]: "10001"
+ * // tags[0]: "foo"
+ * // tags[1]: "bar"
+ * ```
+ *
+ * ### Decoding FormData
+ * ```typescript
+ * import { decode } from "@rj/formdata";
+ *
+ * const formData = new FormData();
+ * formData.append("email", "john@doe.com");
+ * formData.append("address[city]", "New York");
+ * formData.append("address[zip]", "10001");
+ * formData.append("tags[0]", "foo");
+ * formData.append("tags[1]", "bar");
+ *
+ * const data = decode(formData);
+ * // Result:
+ * // {
+ * //   email: "john@doe.com",
+ * //   address: { city: "New York", zip: "10001" },
+ * //   tags: ["foo", "bar"],
+ * // }
+ * ```
+ *
+ * ### Nested Objects in Arrays
+ * ```typescript
+ * const formData = new FormData();
+ * formData.append("users[0][name]", "john doe");
+ * formData.append("users[1][name]", "jane doe");
+ * formData.append("users[0][tags][0]", "foo");
+ *
+ * const data = decode(formData);
+ * // Result:
+ * // {
+ * //   users: [
+ * //     { name: "john doe", tags: ["foo"] },
+ * //     { name: "jane doe" },
+ * //   ],
+ * // }
+ * ```
+ *
+ * ## API
+ *
+ * ### encode(data: Record<string, unknown>): FormData
+ * Encodes a JSON-like object into a FormData instance using bracket notation.
+ *
+ * - **Arguments**:
+ *   - `data`: A JSON-like object to encode.
+ * - **Returns**: A FormData instance.
+ *
+ * ### decode(formData: FormData): Record<string, unknown>
+ * Decodes a FormData instance into a structured JSON-like object.
+ *
+ * - **Arguments**:
+ *   - `formData`: The FormData instance to decode.
+ * - **Returns**: A JSON-like object.
+ *
+ * ## License
+ * MIT
+ */
 
 /**
  * Encodes a nested object into FormData with appropriate brackets.
@@ -47,8 +136,8 @@ export function encode(data: Record<string, unknown>): FormData {
  * @param {FormData} formData - The FormData instance to decode.
  * @returns {JSONValue} - A structured object representing the FormData.
  */
-export function decode(formData: FormData): JSONValue {
-	const result: JSONValue = {};
+export function decode(formData: FormData): Record<string, unknown> {
+	const result: Record<string, unknown> = {};
 
 	const setNestedValue = (
 		target: Record<string, unknown>,

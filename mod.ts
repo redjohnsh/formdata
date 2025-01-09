@@ -79,18 +79,30 @@ export function encode(data: Record<string, unknown>): FormData {
 	return formData;
 }
 
+type DecodeOptions = {
+	emptyString?: "keep" | "set undefined" | "set null";
+};
+
 /**
  * Decodes a FormData instance into a complex nested object.
  *
  * @param {FormData} formData - The FormData instance to decode.
+ * @param {"keep" | "set undefined" | "set null"} [options.emptyString="keep"] - Specifies how to handle empty string values:
+ *   - `"keep"`: Retain the empty string as is (default behavior).
+ *   - `"set undefined"`: Convert empty strings to `undefined`.
+ *   - `"set null"`: Convert empty strings to `null`.
  * @returns {JSONValue} - A structured object representing the FormData.
  */
-export function decode(formData: FormData): Record<string, unknown> {
+export function decode(
+	formData: FormData,
+	options: DecodeOptions = {},
+): Record<string, unknown> {
 	const result: Record<string, unknown> = {};
+	const { emptyString = "keep" } = options;
 
 	const setNestedValue = (
 		target: Record<string, unknown>,
-		keys: readonly string[],
+		keys: string[],
 		value: unknown,
 	): void => {
 		let current = target;
@@ -100,25 +112,42 @@ export function decode(formData: FormData): Record<string, unknown> {
 			const isLast = i === keys.length - 1;
 
 			if (isLast) {
-				current[key] = value;
-			} else {
-				if (!current[key]) {
-					// Next key is numeric, so this should be an array
-					if (/^\d+$/.test(keys[i + 1])) {
-						current[key] = [];
+				// Handle empty string
+				if (typeof value === "string" && value.trim() === "") {
+					if (emptyString === "set null") {
+						current[key] = null;
+					} else if (emptyString === "set undefined") {
+						// Skip assignment
 					} else {
-						current[key] = {};
+						current[key] = ""; // Default to "keep"
 					}
+				} else {
+					current[key] = value;
 				}
-
+			} else {
+				// Create nested structure if necessary
+				if (!(key in current)) {
+					current[key] = /^\d+$/.test(keys[i + 1]) ? [] : {};
+				}
 				current = current[key] as Record<string, unknown>;
 			}
 		}
 	};
 
+	// Pre-split keys for better performance
+	const keyCache = new Map<string, string[]>();
+	const getKeys = (rawKey: string): string[] => {
+		if (!keyCache.has(rawKey)) {
+			keyCache.set(
+				rawKey,
+				rawKey.split(/[\[\]]+/).filter((key) => key),
+			);
+		}
+		return keyCache.get(rawKey)!;
+	};
+
 	for (const [rawKey, value] of formData.entries()) {
-		const keys = rawKey.split(/[\[\]]+/).filter((key) => key.length);
-		setNestedValue(result, keys, value);
+		setNestedValue(result, getKeys(rawKey), value);
 	}
 
 	return result;

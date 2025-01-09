@@ -96,3 +96,36 @@ Deno.test("decode() handles nested objects inside arrays", () => {
 	};
 	assertEquals(actual, expected);
 });
+
+Deno.test("decode() uses `keep` option", () => {
+	const formData = new FormData();
+	formData.append("id", "1");
+	formData.append("name", "");
+	formData.append("address[street]", " ");
+
+	const actual = decode(formData, { emptyString: "keep" });
+	const expected = { id: "1", name: "", address: { street: "" } };
+	assertEquals(actual, expected);
+});
+
+Deno.test("decode() uses `set null` option", () => {
+	const formData = new FormData();
+	formData.append("id", "1");
+	formData.append("name", "");
+	formData.append("address[street]", " ");
+
+	const actual = decode(formData, { emptyString: "set null" });
+	const expected = { id: "1", name: null, address: { street: null } };
+	assertEquals(actual, expected);
+});
+
+Deno.test("decode() uses `set undefined` option", () => {
+	const formData = new FormData();
+	formData.append("id", "1");
+	formData.append("name", "");
+	formData.append("address[street]", " ");
+
+	const actual = decode(formData, { emptyString: "set undefined" });
+	const expected = { id: "1", address: {} };
+	assertEquals(actual, expected);
+});
